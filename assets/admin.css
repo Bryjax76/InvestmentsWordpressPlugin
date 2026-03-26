@@ -1,0 +1,70 @@
+/*
+  SM Investments Fixed – Admin UI polish
+  Keep it lightweight and consistent with WP admin.
+*/
+
+.sm-inv-fixed .sm-inv-fixed-media{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.sm-inv-fixed .sm-inv-fixed-thumb{
+  width:64px;
+  height:64px;
+  object-fit:cover;
+  border:1px solid #d0d7de;
+  border-radius:10px;
+  background:#fff;
+  box-shadow:0 1px 2px rgba(0,0,0,.06);
+}
+
+/* make forms breathe a bit */
+.sm-inv-fixed .form-table th{
+  width:240px;
+}
+.sm-inv-fixed .form-table td{
+  vertical-align:top;
+}
+.sm-inv-fixed .form-table textarea.large-text{
+  max-width:860px;
+}
+
+/* Filters bar */
+.sm-inv-fixed .tablenav .sm-inv-fixed-filters select{
+  min-width:240px;
+  margin-right:8px;
+}
+
+/* Repeater */
+.sm-inv-fixed .sm-inv-fixed-repeater{
+  max-width:980px;
+}
+.sm-inv-fixed .sm-inv-fixed-repeater table{
+  border-radius:12px;
+  overflow:hidden;
+}
+.sm-inv-fixed .sm-inv-fixed-repeater table thead th{
+  background:#f6f7f7;
+}
+.sm-inv-fixed .sm-inv-fixed-repeater table td{
+  vertical-align:middle;
+}
+.sm-inv-fixed .sm-inv-fixed-repeater-row .regular-text{
+  width:100%;
+}
+.sm-inv-fixed .sm-inv-fixed-repeater-row .button.link-delete{
+  color:#b32d2e;
+}
+
+/* Gallery picker */
+.sm-inv-fixed .sm-inv-fixed-gallery{
+  max-width:980px;
+}
+.sm-inv-fixed .sm-inv-fixed-gallery-preview img{
+  width:80px;
+  height:80px;
+  border-radius:10px;
+  object-fit:cover;
+  border:1px solid #d0d7de;
+}
