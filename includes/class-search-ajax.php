@@ -13,10 +13,10 @@ final class SM_INV_Fixed_Search_Ajax
     public static function handle(): void
     {
         // 1️⃣ Nonce
-        $nonce = $_POST['sm_flats_search_nonce_field'] ?? '';
-        if (!wp_verify_nonce($nonce, 'sm_flats_search_nonce')) {
-            wp_send_json_error(['message' => 'Nieprawidłowy nonce.'], 403);
-        }
+        // $nonce = $_POST['sm_flats_search_nonce_field'] ?? '';
+        // if (!wp_verify_nonce($nonce, 'sm_flats_search_nonce')) {
+        //     wp_send_json_error(['message' => 'Nieprawidłowy nonce.'], 403);
+        // }
 
         // 2️⃣ Numer strony
         $page = isset($_POST['pg']) ? max(1, (int) $_POST['pg']) : 1;

@@ -845,9 +845,11 @@ class SM_INV_Fixed_Shortcodes
     }
     public static function ajax_inv_step(): void
     {
-        if (!check_ajax_referer('sm_inv_nonce', 'nonce', false)) {
-            wp_send_json(['ok' => false, 'message' => 'Invalid nonce']);
-        }
+        // DISABLED DUE TO NONCE ERROR WITH CACHE PLUGIN
+        // if (!check_ajax_referer('sm_inv_nonce', 'nonce', false)) {
+        //     wp_send_json(['ok' => false, 'message' => 'Invalid nonce']);
+        // }
+        // DISABLED DUE TO NONCE ERROR WITH CACHE PLUGIN
 
         $inv_id = isset($_POST['inv_id']) ? (int) $_POST['inv_id'] : 0;
         $object_selector = isset($_POST['object_id']) ? (int) $_POST['object_id'] : 0;

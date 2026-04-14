@@ -1,14 +1,14 @@
 #sm-inv-svg .sm-building {
     cursor: pointer;
     transition: fill .18s ease, stroke .18s ease, opacity .18s ease, filter .18s ease;
-    stroke: rgba(2, 0, 192, 0.35);
-    stroke-width: 2;
-}
 
+}
+#sm-inv-svg .sm-building.st1{
+    fill: transparent;
+}
 #sm-inv-svg .sm-building:hover {
     fill: rgba(2, 0, 192, 0.55);
     stroke: rgba(2, 0, 192, 0.55);
-    filter: drop-shadow(0 6px 14px rgba(2, 0, 192, .55));
 }
 
 #sm-inv-svg .st0.sm-building:hover {
@@ -19,9 +19,9 @@
 }
 
 #sm-inv-svg {
-    height: 60vh;
+    height: 80vh;
     min-height: 420px;
-    max-height: 700px;
+    max-height: 800px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -164,7 +164,9 @@ polygon.sm-floor:hover {
     cursor: not-allowed;
     opacity: .75;
 }
-
+#sm-inv-svg svg .sm-flat:hover{
+    fill: #2F2D7B;
+}
 /* standards */
 .standards-wrapper {
     display: grid;

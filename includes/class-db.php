@@ -1225,24 +1225,35 @@ final class SM_INV_Fixed_DB
         global $wpdb;
 
         $t_flats = self::tables()['flats'];
-        $t_floors = self::tables()['floors'];  // sm_buildings
-        $t_objects = self::tables()['objects']; // sm_objects
-        $t_investments = self::tables()['investments']; // sm_investments
+        $t_floors = self::tables()['floors'];
+        $t_objects = self::tables()['objects'];
+        $t_investments = self::tables()['investments'];
 
-        $per_page = isset($filters['per_page']) ? max(1, (int) $filters['per_page']) : 9;
-        $page = isset($filters['page']) ? max(1, (int) $filters['page']) : 1;
+        $per_page = max(1, (int) ($filters['per_page'] ?? 9));
+        $page = max(1, (int) ($filters['page'] ?? 1));
         $offset = ($page - 1) * $per_page;
 
-        // Tylko aktywne mieszkania (status = 1)
-        $where = ['f.status = %d'];
-        $args = [1];
+        // ========================
+        // BASE QUERY
+        // ========================
 
-        $sql = "
+        $sql_from = "
         FROM {$t_flats} f
-        LEFT JOIN {$t_floors} b ON b.id = f.id_bud
-        LEFT JOIN {$t_objects} o ON o.id = b.id_object
-        LEFT JOIN {$t_investments} inv ON inv.id = o.inv_id
+        INNER JOIN {$t_floors} b ON b.id = f.id_bud
+        INNER JOIN {$t_objects} o ON o.id = b.id_object
+        INNER JOIN {$t_investments} inv ON inv.id = o.inv_id
     ";
+
+        // ========================
+        // WHERE (ZAWSZE)
+        // ========================
+
+        $where = [
+            'f.status = %d',     // aktywne mieszkania
+            'inv.status = %d'    // 🔥 aktywne inwestycje (KLUCZ)
+        ];
+
+        $args = [1, 1];
 
         // ========================
         // FILTRY
@@ -1262,12 +1273,14 @@ final class SM_INV_Fixed_DB
 
         // Pokoje
         if (!empty($filters['rooms'])) {
-            if ((int) $filters['rooms'] === 4) {
+            $rooms = (int) $filters['rooms'];
+
+            if ($rooms === 4) {
                 $where[] = 'f.rooms >= %d';
                 $args[] = 4;
             } else {
                 $where[] = 'f.rooms = %d';
-                $args[] = (int) $filters['rooms'];
+                $args[] = $rooms;
             }
         }
 
@@ -1299,59 +1312,52 @@ final class SM_INV_Fixed_DB
         // SORTOWANIE
         // ========================
 
+        $order_map = [
+            'price_asc' => 'f.price ASC',
+            'price_desc' => 'f.price DESC',
+            'meters_asc' => 'f.meters ASC',
+            'meters_desc' => 'f.meters DESC',
+            'rooms_asc' => 'f.rooms ASC',
+            'rooms_desc' => 'f.rooms DESC',
+        ];
+
         $order_sql = ' ORDER BY f.id DESC';
 
-        if (!empty($filters['sort'])) {
-            switch ($filters['sort']) {
-                case 'price_asc':
-                    $order_sql = ' ORDER BY f.price ASC';
-                    break;
-                case 'price_desc':
-                    $order_sql = ' ORDER BY f.price DESC';
-                    break;
-                case 'meters_asc':
-                    $order_sql = ' ORDER BY f.meters ASC';
-                    break;
-                case 'meters_desc':
-                    $order_sql = ' ORDER BY f.meters DESC';
-                    break;
-                case 'rooms_asc':
-                    $order_sql = ' ORDER BY f.rooms ASC';
-                    break;
-                case 'rooms_desc':
-                    $order_sql = ' ORDER BY f.rooms DESC';
-                    break;
-            }
+        if (!empty($filters['sort']) && isset($order_map[$filters['sort']])) {
+            $order_sql = ' ORDER BY ' . $order_map[$filters['sort']];
         }
 
         // ========================
-        // COUNT (bez LIMIT)
+        // COUNT
         // ========================
 
-        $count_sql = "SELECT COUNT(*) " . $sql . $where_sql;
+        $count_sql = "SELECT COUNT(*) {$sql_from} {$where_sql}";
 
         $total = (int) $wpdb->get_var(
             $wpdb->prepare($count_sql, ...$args)
         );
 
         // ========================
-        // DANE (z LIMIT)
+        // DATA
         // ========================
 
         $data_sql = "
         SELECT 
             f.*, 
-            b.floors_no AS floor_no, 
+            b.floors_no AS floor_no,
             o.inv_id,
             inv.title AS investment_title
-        {$sql}
+        {$sql_from}
         {$where_sql}
         {$order_sql}
         LIMIT %d OFFSET %d
     ";
 
         $rows = $wpdb->get_results(
-            $wpdb->prepare($data_sql, ...array_merge($args, [$per_page, $offset])),
+            $wpdb->prepare(
+                $data_sql,
+                ...array_merge($args, [$per_page, $offset])
+            ),
             ARRAY_A
         ) ?: [];
 

@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
         zdrowie: { color: '#AF423E', svg: 'heart-pulse.svg' },
         oswiata: { color: '#AF423E', svg: 'school.svg' },
         sklepy: { color: '#AF423E', svg: 'shop.svg' },
-        sport: { color: '#AF423E', svg: 'sport.svg' } // <- podmień na prawdziwy plik
+        sport: { color: '#AF423E', svg: 'sport.svg' }
     };
 
 
@@ -189,8 +189,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
             refreshMarkers();
         });
-
     });
-
-
 });

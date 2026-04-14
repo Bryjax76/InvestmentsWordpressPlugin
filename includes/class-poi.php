@@ -4,8 +4,6 @@ if (!defined('ABSPATH'))
 
 final class SM_INV_Fixed_POI_Service
 {
-    const CACHE_TTL = 7 * DAY_IN_SECONDS; // 7 dni
-
     /* ===============================================================
        PUBLIC API
     =============================================================== */
@@ -36,18 +34,14 @@ final class SM_INV_Fixed_POI_Service
 
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM {$t}
-                 WHERE investment_id = %d
-                 AND fetched_at > %s",
-                $investment_id,
-                gmdate('Y-m-d H:i:s', time() - self::CACHE_TTL)
+                "SELECT * FROM {$t} WHERE investment_id = %d",
+                $investment_id
             ),
             ARRAY_A
         );
 
         return $rows ?: [];
     }
-
     private static function store(int $investment_id, array $pois): void
     {
         global $wpdb;

@@ -294,7 +294,9 @@
         async function postStep(payload) {
             const form = new FormData();
             form.append("action", "sm_inv_step");
-            form.append("nonce", cfg.nonce);
+            // DISABLED DUE TO NONCE ERROR WITH CACHE PLUGIN
+            // form.append("nonce", cfg.nonce);
+            // DISABLED DUE TO NONCE ERROR WITH CACHE PLUGIN
 
             Object.entries(payload).forEach(([k, v]) => form.append(k, v));
 

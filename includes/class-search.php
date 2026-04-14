@@ -8,11 +8,9 @@ final class SM_INV_Fixed_Search
 
         // 🔥 FIX NA PAGE W URL
         add_filter('redirect_canonical', function ($redirect_url) {
-
-            if (is_page('znajdz-mieszkanie') && isset($_GET['page'])) {
+            if (is_page('znajdz-mieszkanie') && isset($_GET['pg'])) {
                 return false;
             }
-
             return $redirect_url;
         });
     }
@@ -48,7 +46,7 @@ final class SM_INV_Fixed_Search
             <div class="sm-search-filters">
                 <form class="sm-search-form" method="post">
 
-                    <?php wp_nonce_field('sm_flats_search_nonce', 'sm_flats_search_nonce_field'); ?>
+                    <?php //wp_nonce_field('sm_flats_search_nonce', 'sm_flats_search_nonce_field'); ?>
                     <input type="hidden" name="action" value="sm_flats_search">
 
                     <!-- INWESTYCJA -->
