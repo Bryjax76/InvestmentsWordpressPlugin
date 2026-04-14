@@ -10,11 +10,12 @@ require_once SM_INV_FIXED_PATH . 'includes/admin/tables/class-flats-table.php';
 require_once SM_INV_FIXED_PATH . 'includes/admin/tables/class-roomtypes-table.php';
 require_once SM_INV_FIXED_PATH . 'includes/admin/tables/class-standards-table.php';
 
+require_once SM_INV_FIXED_PATH . 'includes/class-dashboard-service.php';
+require_once SM_INV_FIXED_PATH . 'includes/admin/class-dashboard-page.php';
 
 final class SM_INV_Fixed_Admin
 {
     const MENU_SLUG = 'sm-inv-fixed';
-
     public static function init(): void
     {
         add_action('admin_menu', [__CLASS__, 'register_menu']);
@@ -98,22 +99,78 @@ final class SM_INV_Fixed_Admin
     public static function register_menu(): void
     {
         add_menu_page(
-            __('Inwestycje', 'sm-inv-fixed'),
-            __('Inwestycje', 'sm-inv-fixed'),
+            __('Siemaszko', 'sm-inv-fixed'),
+            __('Siemaszko', 'sm-inv-fixed'),
             'manage_options',
             self::MENU_SLUG,
-            [__CLASS__, 'render_investments'],
+            ['SM_INV_Fixed_Dashboard_Page', 'render'], // 👈 DASHBOARD jako główny widok
             'dashicons-building',
             26
         );
 
-        add_submenu_page(self::MENU_SLUG, __('Inwestycje', 'sm-inv-fixed'), __('Inwestycje', 'sm-inv-fixed'), 'manage_options', self::MENU_SLUG, [__CLASS__, 'render_investments']);
-        add_submenu_page(self::MENU_SLUG, __('Budynki', 'sm-inv-fixed'), __('Budynki', 'sm-inv-fixed'), 'manage_options', self::MENU_SLUG . '-objects', [__CLASS__, 'render_objects']);
-        add_submenu_page(self::MENU_SLUG, __('Piętra', 'sm-inv-fixed'), __('Piętra', 'sm-inv-fixed'), 'manage_options', self::MENU_SLUG . '-floors', [__CLASS__, 'render_floors']);
-        add_submenu_page(self::MENU_SLUG, __('Mieszkania', 'sm-inv-fixed'), __('Mieszkania', 'sm-inv-fixed'), 'manage_options', self::MENU_SLUG . '-flats', [__CLASS__, 'render_flats']);
-        add_submenu_page(self::MENU_SLUG, __('Typy pomieszczeń', 'sm-inv-fixed'), __('Typy pomieszczeń', 'sm-inv-fixed'), 'manage_options', self::MENU_SLUG . '-roomtypes', [__CLASS__, 'render_roomtypes']);
-        add_submenu_page(self::MENU_SLUG, __('Standard inwestycji', 'sm-inv-fixed'), __('Standard inwestycji', 'sm-inv-fixed'), 'manage_options', self::MENU_SLUG . '-standards', [__CLASS__, 'render_standards']);
+        // 👇 TO MUSI BYĆ PIERWSZE — decyduje o domyślnym widoku
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('Dashboard', 'sm-inv-fixed'),
+            __('Dashboard', 'sm-inv-fixed'),
+            'manage_options',
+            self::MENU_SLUG,
+            ['SM_INV_Fixed_Dashboard_Page', 'render']
+        );
 
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('Inwestycje', 'sm-inv-fixed'),
+            __('Inwestycje', 'sm-inv-fixed'),
+            'manage_options',
+            self::MENU_SLUG . '-investments',
+            [__CLASS__, 'render_investments']
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('Budynki', 'sm-inv-fixed'),
+            __('Budynki', 'sm-inv-fixed'),
+            'manage_options',
+            self::MENU_SLUG . '-objects',
+            [__CLASS__, 'render_objects']
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('Piętra', 'sm-inv-fixed'),
+            __('Piętra', 'sm-inv-fixed'),
+            'manage_options',
+            self::MENU_SLUG . '-floors',
+            [__CLASS__, 'render_floors']
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('Mieszkania', 'sm-inv-fixed'),
+            __('Mieszkania', 'sm-inv-fixed'),
+            'manage_options',
+            self::MENU_SLUG . '-flats',
+            [__CLASS__, 'render_flats']
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('Typy pomieszczeń', 'sm-inv-fixed'),
+            __('Typy pomieszczeń', 'sm-inv-fixed'),
+            'manage_options',
+            self::MENU_SLUG . '-roomtypes',
+            [__CLASS__, 'render_roomtypes']
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('Standard inwestycji', 'sm-inv-fixed'),
+            __('Standard inwestycji', 'sm-inv-fixed'),
+            'manage_options',
+            self::MENU_SLUG . '-standards',
+            [__CLASS__, 'render_standards']
+        );
     }
 
     // ---------- Renderers ----------
