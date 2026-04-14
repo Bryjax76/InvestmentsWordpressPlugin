@@ -103,28 +103,27 @@ final class SM_INV_Fixed_Admin
             __('Siemaszko', 'sm-inv-fixed'),
             'manage_options',
             self::MENU_SLUG,
-            ['SM_INV_Fixed_Dashboard_Page', 'render'], // 👈 DASHBOARD jako główny widok
+            [__CLASS__, 'render_investments'],
             'dashicons-building',
             26
         );
 
-        // 👇 TO MUSI BYĆ PIERWSZE — decyduje o domyślnym widoku
         add_submenu_page(
             self::MENU_SLUG,
-            __('Dashboard', 'sm-inv-fixed'),
-            __('Dashboard', 'sm-inv-fixed'),
+            __('Inwestycje', 'sm-inv-fixed'),
+            __('Inwestycje', 'sm-inv-fixed'),
             'manage_options',
             self::MENU_SLUG,
-            ['SM_INV_Fixed_Dashboard_Page', 'render']
+            [__CLASS__, 'render_investments']
         );
 
         add_submenu_page(
             self::MENU_SLUG,
-            __('Inwestycje', 'sm-inv-fixed'),
-            __('Inwestycje', 'sm-inv-fixed'),
+            __('Dashboard', 'sm-inv-fixed'),
+            __('Dashboard', 'sm-inv-fixed'),
             'manage_options',
-            self::MENU_SLUG . '-investments',
-            [__CLASS__, 'render_investments']
+            self::MENU_SLUG . '-dashboard',
+            ['SM_INV_Fixed_Dashboard_Page', 'render']
         );
 
         add_submenu_page(
