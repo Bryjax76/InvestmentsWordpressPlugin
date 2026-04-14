@@ -7,7 +7,6 @@ require_once SM_INV_FIXED_PATH . 'includes/admin/tables/class-base-table.php';
 
 final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
 {
-
     /** @var array<int,string> */
     private array $floor_map = [];
 
@@ -59,61 +58,73 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
 
     public function prepare_items()
     {
-
         $columns = $this->get_columns();
         $hidden = [];
         $sortable = $this->get_sortable_columns();
         $this->_column_headers = [$columns, $hidden, $sortable];
 
-        // === AKTUALNIE WYBRANA INWESTYCJA ===
+        // Currently selected investment
         $current_inv = absint($_REQUEST['filter_inv_id'] ?? 0);
 
         /*
          * =========================
-         * MAP PIĘTER (zależne od inwestycji)
+         * FLOORS MAP
          * =========================
+         * Show floors only for the selected investment.
+         * If no investment is selected, keep the map empty
+         * so the dropdown stays readable.
          */
         $this->floor_map = [];
 
         if ($current_inv > 0 && method_exists('SM_INV_Fixed_DB', 'floors_for_select_by_investment')) {
             $floors = SM_INV_Fixed_DB::floors_for_select_by_investment($current_inv);
         } else {
-            $floors = SM_INV_Fixed_DB::floors_for_select();
+            $floors = [];
         }
 
         foreach ($floors as $f) {
             $id = (int) ($f['id'] ?? 0);
-            if (!$id)
+            if (!$id) {
                 continue;
+            }
 
             $label = trim((string) ($f['name'] ?? ''));
             $no = (string) ($f['floor_no'] ?? ($f['floors_no'] ?? ''));
 
             if ($no !== '') {
-                $label .= ' (' . $no . ')';
+                $label .= ' - piętro ' . $no;
             }
 
             $this->floor_map[$id] = $label !== '' ? $label : ('ID ' . $id);
         }
 
+        if (!empty($this->floor_map)) {
+            asort($this->floor_map, SORT_NATURAL | SORT_FLAG_CASE);
+        }
+
         /*
          * =========================
-         * MAP TYPÓW
+         * TYPES MAP
          * =========================
          */
         $this->type_map = [];
 
         foreach (SM_INV_Fixed_DB::room_types_all() as $rt) {
             $id = (int) ($rt['id'] ?? 0);
-            if (!$id)
+            if (!$id) {
                 continue;
+            }
 
             $this->type_map[$id] = (string) ($rt['name'] ?? ('ID ' . $id));
         }
 
+        if (!empty($this->type_map)) {
+            asort($this->type_map, SORT_NATURAL | SORT_FLAG_CASE);
+        }
+
         /*
          * =========================
-         * MAP INWESTYCJI
+         * INVESTMENTS MAP
          * =========================
          */
         $this->investment_map = [];
@@ -121,16 +132,21 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
         if (method_exists('SM_INV_Fixed_DB', 'investments_all')) {
             foreach (SM_INV_Fixed_DB::investments_all() as $inv) {
                 $id = (int) ($inv['id'] ?? 0);
-                if (!$id)
+                if (!$id) {
                     continue;
+                }
 
                 $this->investment_map[$id] = (string) ($inv['title'] ?? ('ID ' . $id));
             }
         }
 
+        if (!empty($this->investment_map)) {
+            asort($this->investment_map, SORT_NATURAL | SORT_FLAG_CASE);
+        }
+
         /*
          * =========================
-         * SORTOWANIE / PAGINACJA
+         * SORTING / PAGINATION
          * =========================
          */
         $paged = $this->get_paged();
@@ -144,12 +160,12 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
             'price',
             'total_price',
             'status',
-            'type_id'
+            'type_id',
         ]);
 
         /*
          * =========================
-         * FILTRY
+         * FILTERS
          * =========================
          */
         $filters = [
@@ -171,7 +187,7 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
 
         /*
          * =========================
-         * POBRANIE DANYCH
+         * FETCH DATA
          * =========================
          */
         [$items, $total] = SM_INV_Fixed_DB::flats_list(
@@ -194,34 +210,43 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
     public function column_id_bud($item)
     {
         $id = (int) ($item['id_bud'] ?? 0);
-        if (!$id)
+
+        if (!$id) {
             return '—';
+        }
+
         return esc_html($this->floor_map[$id] ?? ('ID ' . $id));
     }
 
     public function column_type_id($item)
     {
         $id = (int) ($item['type_id'] ?? 0);
-        if (!$id)
+
+        if (!$id) {
             return '—';
+        }
+
         return esc_html($this->type_map[$id] ?? ('ID ' . $id));
     }
 
     public function column_status($item)
     {
         $v = (int) ($item['status'] ?? 0);
+
         $map = [
             0 => 'Niedostępne',
             1 => 'Dostępne',
             2 => 'Zarezerwowane',
         ];
+
         return esc_html($map[$v] ?? (string) $v);
     }
 
     public function extra_tablenav($which)
     {
-        if ($which !== 'top')
+        if ($which !== 'top') {
             return;
+        }
 
         $current_inv = absint($_REQUEST['filter_inv_id'] ?? 0);
         $current_floor = absint($_REQUEST['filter_floor_id'] ?? 0);
@@ -232,9 +257,10 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
 
         echo '<div class="alignleft actions sm-inv-fixed-filters">';
 
-        // === INWESTYCJA ===
+        // Investment filter
         echo '<select name="filter_inv_id">';
         echo '<option value="0">Wszystkie inwestycje</option>';
+
         foreach ($this->investment_map as $id => $label) {
             printf(
                 '<option value="%d" %s>%s</option>',
@@ -243,24 +269,36 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
                 esc_html($label)
             );
         }
+
         echo '</select>';
 
-        // === PIĘTRO ===
+        // Floor filter
+        // Show only floors assigned to the selected investment.
+        // If no investment is selected, show a placeholder instead
+        // of listing every floor in the system.
         echo '<select name="filter_floor_id">';
-        echo '<option value="0">Wszystkie piętra</option>';
-        foreach ($this->floor_map as $id => $label) {
-            printf(
-                '<option value="%d" %s>%s</option>',
-                (int) $id,
-                selected($current_floor, (int) $id, false),
-                esc_html($label)
-            );
+
+        if ($current_inv > 0) {
+            echo '<option value="0">Wszystkie piętra</option>';
+
+            foreach ($this->floor_map as $id => $label) {
+                printf(
+                    '<option value="%d" %s>%s</option>',
+                    (int) $id,
+                    selected($current_floor, (int) $id, false),
+                    esc_html($label)
+                );
+            }
+        } else {
+            echo '<option value="0">Select an investment first</option>';
         }
+
         echo '</select>';
 
-        // === TYP ===
+        // Type filter
         echo '<select name="filter_type_id">';
         echo '<option value="0">Wszystkie typy</option>';
+
         foreach ($this->type_map as $id => $label) {
             printf(
                 '<option value="%d" %s>%s</option>',
@@ -269,15 +307,25 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
                 esc_html($label)
             );
         }
+
         echo '</select>';
 
-        // === STATUS ===
+        // Status filter
         echo '<select name="filter_status">';
         echo '<option value="" ' . selected($current_status, '', false) . '>Wszystkie statusy</option>';
         echo '<option value="1" ' . selected($current_status, '1', false) . '>Dostępne</option>';
         echo '<option value="0" ' . selected($current_status, '0', false) . '>Niedostępne</option>';
         echo '<option value="2" ' . selected($current_status, '2', false) . '>Zarezerwowane</option>';
         echo '</select>';
+
+        // Preserve sorting when filtering
+        if (isset($_GET['orderby'])) {
+            echo '<input type="hidden" name="orderby" value="' . esc_attr((string) $_GET['orderby']) . '">';
+        }
+
+        if (isset($_GET['order'])) {
+            echo '<input type="hidden" name="order" value="' . esc_attr((string) $_GET['order']) . '">';
+        }
 
         submit_button('Filtruj', '', 'filter_action', false);
 
@@ -290,7 +338,7 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
 
         $edit = SM_INV_Fixed_Utils::admin_url_page($page, [
             'action' => 'edit',
-            'id' => (int) $item['id']
+            'id' => (int) $item['id'],
         ]);
 
         $del_url = wp_nonce_url(
@@ -299,10 +347,8 @@ final class SM_INV_Fixed_Flats_Table extends SM_INV_Fixed_Base_Table
         );
 
         return sprintf(
-            '<a class="button button-small" href="%s">Edytuj</a> 
-             <a class="button button-small button-link-delete" 
-                href="%s" 
-                onclick="return confirm(\'Usunąć?\')">Usuń</a>',
+            '<a class="button button-small" href="%s">Edytuj</a>
+             <a class="button button-small button-link-delete" href="%s" onclick="return confirm(\'Usunąć?\')">Usuń</a>',
             esc_url($edit),
             esc_url($del_url)
         );
