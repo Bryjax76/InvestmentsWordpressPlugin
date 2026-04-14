@@ -13,6 +13,7 @@ class SM_INV_Fixed_Dashboard_Page
 
         $summary = SM_INV_Fixed_Dashboard_Service::get_summary();
         $rows = SM_INV_Fixed_Dashboard_Service::get_investments_rows();
+        $validations = SM_INV_Fixed_Dashboard_Service::get_validations();
 
         echo '<div class="wrap sm-inv-fixed sm-inv-dashboard">';
         echo '<h1>Dashboard inwestycji</h1>';
@@ -27,6 +28,7 @@ class SM_INV_Fixed_Dashboard_Page
         echo '<div style="margin-top:16px;max-width:260px;">';
         self::card('Poziom sprzedaży', $summary['sales_percent'] . '%');
         echo '</div>';
+
 
         echo '<div style="margin-top:30px;background:#fff;padding:20px;border:1px solid #e5e7eb;border-radius:12px;">';
         echo '<h2 style="margin-top:0;">Aktywne inwestycje</h2>';
@@ -64,6 +66,7 @@ class SM_INV_Fixed_Dashboard_Page
         }
 
         echo '</div>';
+        self::render_validations($validations);
 
         self::render_inline_styles();
         self::render_inline_script();
@@ -76,6 +79,45 @@ class SM_INV_Fixed_Dashboard_Page
         echo '<div style="background:#fff;padding:20px;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);">';
         echo '<div style="font-size:13px;color:#6b7280;margin-bottom:8px;">' . esc_html($label) . '</div>';
         echo '<div style="font-size:28px;font-weight:700;line-height:1.2;">' . esc_html($value) . '</div>';
+        echo '</div>';
+    }
+
+    private static function render_validations(array $validations): void
+    {
+        echo '<div style="margin-top:30px;background:#fff;padding:20px;border:1px solid #e5e7eb;border-radius:12px;">';
+        echo '<h2 style="margin-top:0;">Wymaga uwagi</h2>';
+
+        if (empty($validations)) {
+            echo '<p style="margin:0;color:#4b5563;">Brak problemów w aktywnych inwestycjach.</p>';
+            echo '</div>';
+            return;
+        }
+
+        echo '<div style="display:flex;flex-direction:column;gap:10px;">';
+
+        foreach ($validations as $validation) {
+            $type = (string) ($validation['type'] ?? 'warning');
+            $title = (string) ($validation['title'] ?? 'Uwaga');
+            $message = (string) ($validation['message'] ?? '');
+            $url = (string) ($validation['url'] ?? '');
+
+            $border = $type === 'error' ? '#dc2626' : '#f59e0b';
+            $bg = $type === 'error' ? '#fef2f2' : '#fffbeb';
+
+            echo '<div style="border:1px solid ' . esc_attr($border) . ';background:' . esc_attr($bg) . ';border-radius:10px;padding:14px 16px;">';
+            echo '<div style="font-weight:700;margin-bottom:4px;">' . esc_html($title) . '</div>';
+            echo '<div style="color:#374151;">' . esc_html($message) . '</div>';
+
+            if ($url !== '') {
+                echo '<div style="margin-top:10px;">';
+                echo '<a class="button button-small" href="' . esc_url($url) . '">Przejdź</a>';
+                echo '</div>';
+            }
+
+            echo '</div>';
+        }
+
+        echo '</div>';
         echo '</div>';
     }
 
@@ -158,7 +200,7 @@ class SM_INV_Fixed_Dashboard_Page
                 margin-left: -20px;
                 margin-top: -20px;
                 border-radius: 999px;
-                background: #2271b1;
+                background: #2b2d83;
                 color: #fff !important;
                 text-decoration: none;
                 display: flex;
@@ -197,7 +239,7 @@ class SM_INV_Fixed_Dashboard_Page
             }
 
             .sm-inv-radial-item:hover {
-                background: #135e96;
+                background: #af423e;
                 color: #fff !important;
             }
 

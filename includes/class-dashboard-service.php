@@ -183,7 +183,199 @@ class SM_INV_Fixed_Dashboard_Service
 
     public static function get_validations(): array
     {
-        return [];
+        global $wpdb;
+
+        $tables = SM_INV_Fixed_DB::tables();
+
+        // Ensure all required tables exist
+        if (
+            empty($tables['investments']) ||
+            empty($tables['objects']) ||
+            empty($tables['floors']) ||
+            empty($tables['flats'])
+        ) {
+            return [];
+        }
+
+        $t_inv = $tables['investments'];
+        $t_obj = $tables['objects'];
+        $t_floor = $tables['floors'];
+        $t_flat = $tables['flats'];
+
+        $validations = [];
+
+        /*
+         * =========================================
+         * 1. Active investments without buildings
+         * =========================================
+         */
+        $rows = $wpdb->get_results("
+        SELECT i.id, i.title, COUNT(o.id) AS cnt
+        FROM {$t_inv} i
+        LEFT JOIN {$t_obj} o ON o.inv_id = i.id
+        WHERE i.status = 1
+        GROUP BY i.id, i.title
+        HAVING cnt = 0
+        ORDER BY i.title ASC
+    ", ARRAY_A);
+
+        foreach ($rows as $row) {
+            $id = (int) $row['id'];
+            $title = (string) $row['title'];
+
+            $validations[] = [
+                'type' => 'warning',
+                'title' => 'No buildings',
+                'message' => 'Investment "' . $title . '" has no buildings.',
+                'url' => SM_INV_Fixed_Utils::admin_url_page(
+                    SM_INV_Fixed_Admin::MENU_SLUG,
+                    ['action' => 'edit', 'id' => $id]
+                ),
+            ];
+        }
+
+        /*
+         * =========================================
+         * 2. Active investments without floors
+         * =========================================
+         */
+        $rows = $wpdb->get_results("
+        SELECT i.id, i.title, COUNT(fl.id) AS cnt
+        FROM {$t_inv} i
+        LEFT JOIN {$t_obj} o ON o.inv_id = i.id
+        LEFT JOIN {$t_floor} fl ON fl.id_object = o.id
+        WHERE i.status = 1
+        GROUP BY i.id, i.title
+        HAVING cnt = 0
+        ORDER BY i.title ASC
+    ", ARRAY_A);
+
+        foreach ($rows as $row) {
+            $id = (int) $row['id'];
+            $title = (string) $row['title'];
+
+            $validations[] = [
+                'type' => 'warning',
+                'title' => 'No floors',
+                'message' => 'Investment "' . $title . '" has no floors.',
+                'url' => SM_INV_Fixed_Utils::admin_url_page(
+                    SM_INV_Fixed_Admin::MENU_SLUG . '-floors',
+                    ['filter_inv_id' => $id]
+                ),
+            ];
+        }
+
+        /*
+         * =========================================
+         * 3. Active investments without flats
+         * =========================================
+         */
+        $rows = $wpdb->get_results("
+        SELECT i.id, i.title, COUNT(f.id) AS cnt
+        FROM {$t_inv} i
+        LEFT JOIN {$t_obj} o ON o.inv_id = i.id
+        LEFT JOIN {$t_floor} fl ON fl.id_object = o.id
+        LEFT JOIN {$t_flat} f ON f.id_bud = fl.id
+        WHERE i.status = 1
+        GROUP BY i.id, i.title
+        HAVING cnt = 0
+        ORDER BY i.title ASC
+    ", ARRAY_A);
+
+        foreach ($rows as $row) {
+            $id = (int) $row['id'];
+            $title = (string) $row['title'];
+
+            $validations[] = [
+                'type' => 'warning',
+                'title' => 'No flats',
+                'message' => 'Investment "' . $title . '" has no flats.',
+                'url' => SM_INV_Fixed_Utils::admin_url_page(
+                    SM_INV_Fixed_Admin::MENU_SLUG . '-flats',
+                    [
+                        'filter_inv_id' => $id,
+                        'filter_floor_id' => 0,
+                        'filter_type_id' => 0,
+                    ]
+                ),
+            ];
+        }
+
+        /*
+         * =========================================
+         * 4. Flats without price
+         * =========================================
+         */
+        $rows = $wpdb->get_results("
+        SELECT f.id, f.code, i.id AS inv_id, i.title
+        FROM {$t_flat} f
+        INNER JOIN {$t_floor} fl ON fl.id = f.id_bud
+        INNER JOIN {$t_obj} o ON o.id = fl.id_object
+        INNER JOIN {$t_inv} i ON i.id = o.inv_id
+        WHERE i.status = 1
+          AND (f.price IS NULL OR f.price = '')
+        ORDER BY i.title ASC
+    ", ARRAY_A);
+
+        foreach ($rows as $row) {
+            $inv_id = (int) $row['inv_id'];
+            $title = (string) $row['title'];
+
+            $validations[] = [
+                'type' => 'warning',
+                'title' => 'Brak ceny',
+                'message' => 'Some flats in "' . $title . '" have no price.',
+                'url' => SM_INV_Fixed_Utils::admin_url_page(
+                    SM_INV_Fixed_Admin::MENU_SLUG . '-flats',
+                    [
+                        'filter_inv_id' => $inv_id,
+                        'filter_floor_id' => 0,
+                        'filter_type_id' => 0,
+                    ]
+                ),
+            ];
+
+            break; // avoid duplicates per investment
+        }
+
+        /*
+         * =========================================
+         * 5. Flats without area (meters)
+         * =========================================
+         */
+        $rows = $wpdb->get_results("
+        SELECT f.id, i.id AS inv_id, i.title
+        FROM {$t_flat} f
+        INNER JOIN {$t_floor} fl ON fl.id = f.id_bud
+        INNER JOIN {$t_obj} o ON o.id = fl.id_object
+        INNER JOIN {$t_inv} i ON i.id = o.inv_id
+        WHERE i.status = 1
+          AND (f.meters IS NULL OR f.meters = '' OR f.meters = 0)
+        ORDER BY i.title ASC
+    ", ARRAY_A);
+
+        foreach ($rows as $row) {
+            $inv_id = (int) $row['inv_id'];
+            $title = (string) $row['title'];
+
+            $validations[] = [
+                'type' => 'warning',
+                'title' => 'Brak powierzchni',
+                'message' => 'Some flats in "' . $title . '" have no area (m²).',
+                'url' => SM_INV_Fixed_Utils::admin_url_page(
+                    SM_INV_Fixed_Admin::MENU_SLUG . '-flats',
+                    [
+                        'filter_inv_id' => $inv_id,
+                        'filter_floor_id' => 0,
+                        'filter_type_id' => 0,
+                    ]
+                ),
+            ];
+
+            break; // avoid duplicates per investment
+        }
+
+        return $validations;
     }
 
     private static function empty_summary(): array
